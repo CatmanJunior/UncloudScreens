@@ -10,15 +10,15 @@
 const int ledPin = 0; // This code uses the built-in led for visual feedback that the button has been pressed
 const int buttonPin1 = 5; // Connect your button to pin #13
 const int buttonPin2 = 4; // Connect your button to pin #13
-const int buttonPin3 = 0; // Connect your button to pin #13
-const int buttonPin4 = 2; // Connect your button to pin #13
+const int buttonPin3 = 16; // Connect your button to pin #13
+const int buttonPin4 = 15; // Connect your button to pin #13
 const int buttonPin5 = 14; // Connect your button to pin #13
 const int buttonPin6 = 12; // Connect your button to pin #13
 const int buttonPin7 = 13; // Connect your button to pin #13
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
-#define PIN            15
+#define PIN            0
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      16
@@ -136,27 +136,27 @@ void loop() {
 
   if (but1.rose()) {
     butpress = 1;
-    pixels.setPixelColor(0, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(5, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but2.rose()) {
     butpress = 2;
-    pixels.setPixelColor(1, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(4, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but3.rose()) {
     butpress = 3;
-    pixels.setPixelColor(2, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(3, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but4.rose()) {
     butpress = 4;
-    pixels.setPixelColor(3, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(2, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but5.rose()) {
     butpress = 5;
-    pixels.setPixelColor(4, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(1, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but6.rose()) {
     butpress = 6;
-    pixels.setPixelColor(5, pixels.Color(0,150,0)); // Moderately bright green color.
+    pixels.setPixelColor(0, pixels.Color(0,0,0)); // Moderately bright green color.
   }
   if (but7.rose()) {
     butpress = 7;
@@ -165,27 +165,27 @@ void loop() {
 
   if (but1.fell()) {
     butpress = 8;
-    pixels.setPixelColor(0, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(5, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but2.fell()) {
     butpress = 9;
-    pixels.setPixelColor(1, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(4, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but3.fell()) {
     butpress = 10;
-    pixels.setPixelColor(2, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(3, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but4.fell()) {
     butpress = 11;
-    pixels.setPixelColor(3, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(2, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but5.fell()) {
     butpress = 12;
-    pixels.setPixelColor(4, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(1, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but6.fell()) {
     butpress = 13;
-    pixels.setPixelColor(5, pixels.Color(0,0,0)); // Moderately bright green color.
+    pixels.setPixelColor(0, pixels.Color(0,155,0)); // Moderately bright green color.
   }
   if (but7.fell()) {
     butpress = 14;
