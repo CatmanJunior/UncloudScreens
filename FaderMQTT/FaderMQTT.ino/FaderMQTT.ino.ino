@@ -6,52 +6,63 @@
 #include <Bounce2.h> // Used for "debouncing" the pushbutton
 #include <ESP8266WiFi.h> // Enables the ESP8266 to connect to the local network (via WiFi)
 #include <PubSubClient.h> // Allows us to connect to, and publish to the MQTT broker
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h> //Lib for the programable leds
+#include <math.h>   
 
-const byte BUTTONPIN1 = 14; // Connect your button to pin D5
-const byte BUTTONPIN2 = 12; // Connect your button to pin D6
-const byte FADERPIN1 = 5; // Connect your fader to pin D1
-const byte FADERPIN2 = 4; // Connect your fader to pin D2
-const byte FADERPIN3 = 13; // Connect your fader to pin D7
-const byte LEDPIN = 0; //Connect your led to pin D3
+const byte BUTTONPIN1 = 14;   // Connect button1 to pin D5
+const byte BUTTONPIN2 = 12;   // Connect button2 to pin D6
+const byte FADERPIN1 = 5;     // Connect fader1 to pin D1
+const byte FADERPIN2 = 4;     // Connect fader2 to pin D2
+const byte FADERPIN3 = 13;    // Connect fader to pin D7
+const byte LEDPIN = 0;        // Connect LED to pin D3
 
-char msgBuffer[20];
-int faderValue1;
-int faderValue2;
-int faderValue3;
-
-// How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      16
+const byte NUMPIXELS = 1;    //Amount of LEDS
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 // WiFi
 // Make sure to update this for your own WiFi network!
-const char* ssid = "Ziggo78F5D45";
-const char* wifi_password = "Sx7phx8fnkeP";
+const char* SS_ID = "test";
+const char* WIFI_PASSWORD = "testtest";
+const char* TEST_SS_ID = "Ziggo78F5D45";
+const char* TEST_WIFI_PASSWORD = "Sx7phx8fnkeP";
 
 // MQTT
 // Make sure to update this for your own MQTT Broker!
-const char* mqtt_server = "192.168.178.194";
-const char* mqtt_topic1 = "button2";
-const char* mqtt_topic2 = "fader1";
-const char* mqtt_topic3 = "fader2";
-const char* mqtt_topic4 = "fader3";
-const char* mqtt_username = "uncloud";
-const char* mqtt_password = "uncloud";
-// The client id identifies the ESP8266 device. Think of it a bit like a hostname (Or just a name, like Greg).
-const char* clientID = "controller1";
+const char* MQTT_SERVER = "192.168.178.194";
+const char* MQTT_TOPIC_BUTTON = "c2_b1";
+const char* MQTT_TOPIC_FADER[3] = {"c2_f1", "c2_f2", "c2_f3"};
+const char* MQTT_USERNAME = "uncloud";
+const char* MQTT_PASSWORD = "uncloud";
+const char* CLIENT_ID = "controller2"; // The client id identifies the ESP8266 device. Think of it a bit like a hostname.
 
-// Initialise the Pushbutton Bouncer object
-Bounce button1 = Bounce();
-Bounce button2 = Bounce();
+char msgBuffer[20];
+
+//// Initialise the Bouncer objects
+Bounce BUTTON[2] = {Bounce(), Bounce()};
+byte FADER[3] = {FADERPIN1, FADERPIN2, FADERPIN3};
+
+int pressedButton = 0;
+
+int faderValue[3] = {0, 0, 0};
 
 // Initialise the WiFi and MQTT Client objects
 WiFiClient wifiClient;
-PubSubClient client(mqtt_server, 1883, wifiClient); // 1883 is the listener port for the Broker
+PubSubClient client(MQTT_SERVER, 1883, wifiClient); // 1883 is the listener port for the Broker
+
+//Method for setting all pixels one color
+void pixelsOneColor(int r, int g, int b) {
+  for (int i = 0; i < NUMPIXELS; i++) {
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+  }
+  pixels.show();
+}
 
 void setup() {
+  Serial.begin(115200);
+
   pixels.begin(); // This initializes the NeoPixel library.
+
   pinMode(FADERPIN1, OUTPUT);
   pinMode(FADERPIN2, OUTPUT);
   pinMode(FADERPIN3, OUTPUT);
@@ -60,99 +71,103 @@ void setup() {
   pinMode(BUTTONPIN2, INPUT);
 
   // Setup pushbutton Bouncer object
-  button1.attach(BUTTONPIN1);
-  button1.interval(5);
-  button2.attach(BUTTONPIN2);
-  button2.interval(5);
+  BUTTON[0].attach(BUTTONPIN1);
+  BUTTON[1].attach(BUTTONPIN2);
 
-  // Begin Serial on 115200
-  // Remember to choose the correct Baudrate on the Serial monitor!
-  // This is just for debugging purposes
-  Serial.begin(115200);
+  for (int i = 0; i < 2; i++) {
+    BUTTON[i].interval(5);
+  }
+
+  pixelsOneColor(100, 155, 000);
+  //Wait a minute before starting up so we are sure the Raspberry has started (Cancel by pressing button)
+  while ((digitalRead(BUTTONPIN1) == LOW) && (millis() < 60000)) {
+    delay(50);
+  }
+
+  delay(500);
+
+  //WIFI INIT
   Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.println(SS_ID);
 
-  // Connect to the WiFi
-  WiFi.begin(ssid, wifi_password);
+  // Connect to the WiFi (if button is being hold, use test wifi)
+  if (digitalRead(BUTTONPIN1) == LOW) WiFi.begin(SS_ID, WIFI_PASSWORD);
+  else WiFi.begin(TEST_SS_ID, TEST_WIFI_PASSWORD);
 
   // Wait until the connection has been confirmed before continuing
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    pixelsOneColor(155, 0, 0);
+    delay(250);
     Serial.print(".");
+    pixelsOneColor(0, 0, 0);
+    delay(250);
   }
 
-  pixels.setPixelColor(0, pixels.Color(0, 0, 0)); // Moderately bright green color.
-  pixels.show(); // This sends the updated pixel color to the hardware.
-
-  // Debugging - Output the IP Address of the ESP8266
+  pixelsOneColor(0, 155, 0);
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  delay(500);
+  pixelsOneColor(0, 0, 0);
 
   // Connect to MQTT Broker
-  // client.connect returns a boolean value to let us know if the connection was successful.
-  // If the connection is failing, make sure you are using the correct MQTT Username and Password (Setup Earlier in the Instructable)
-  if (client.connect(clientID, mqtt_username, mqtt_password)) {
+  if (client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.println("Connected to MQTT Broker!");
-  }
-  else {
+  } else {
     Serial.println("Connection to MQTT Broker failed...");
+    pixelsOneColor(0, 155, 155); //if no connection turn purple
   }
 }
 
-
 void loop() {
-  digitalWrite(FADERPIN1, HIGH);
-  faderValue1 = analogRead(A0);
-  digitalWrite(FADERPIN1, LOW);
-  delay(5);
-  digitalWrite(FADERPIN2, HIGH);
-  faderValue2 = analogRead(A0);
-  digitalWrite(FADERPIN2, LOW);
-  delay(5);
-  digitalWrite(FADERPIN3, HIGH);
-  faderValue3 = analogRead(A0);
-  digitalWrite(FADERPIN3, LOW);
-  delay(5);
+  pressedButton = 0; //Reset the pressedButton
 
-  int pressedButton = 0;
-  // Update button state
-  button1.update();
-  button2.update();
-
-  if (button1.rose()) {
-    pressedButton = 1;
-    pixels.setPixelColor(0, pixels.Color(0, 150, 0)); // Moderately bright green color.
-  }
-  if (button2.rose()) {
-    pressedButton = 2;
-    pixels.setPixelColor(0, pixels.Color(150, 0, 0)); // Moderately bright green color.
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(FADER[i], HIGH);
+    delay(5);
+    faderValue[i] = analogRead(A0);
+//    faderValue[i] = log10(analogRead(A0)) * 323;
+    digitalWrite(FADER[i], LOW);
   }
 
+  for (int i = 0; i < 2; i++) {
+    BUTTON[i].update();     //Update the button state
+    if (BUTTON[i].rose()) { //If it went from low to high
+      pressedButton = i + 1;
+      if (i == 0) pixels.setPixelColor(0, pixels.Color(0, 150, 0)); // Moderately bright green color.
+      if (i == 1) pixels.setPixelColor(0, pixels.Color(150, 0, 0)); // Moderately bright green color.
+    }
+    if (BUTTON[i].fell()) { //if it went from high to low
+      pressedButton = i + 3;
+    }
+  }
 
   pixels.show(); // This sends the updated pixel color to the hardware.
 
-
   if (pressedButton != 0) {
-    // PUBLISH to the MQTT Broker (topic = mqtt_topic, defined at the beginning)
-    // Here, "Button pressed!" is the Payload, but this could be changed to a sensor reading, for example.
-
-    if (client.publish(mqtt_topic1, dtostrf(pressedButton, 2, 0, msgBuffer))) {
+    sprintf(msgBuffer, "%02d", pressedButton);
+    Serial.println(msgBuffer);
+    // PUBLISH to the MQTT Broker
+    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
       Serial.println("Button pushed and message sent!");
     }
-    else {
+    else { //if it failed, try again
       Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
-      client.connect(clientID, mqtt_username, mqtt_password);
+      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
+      client.publish(MQTT_TOPIC_BUTTON, msgBuffer);
     }
   }
-  client.publish(mqtt_topic2, dtostrf(faderValue1, 4, 0, msgBuffer));
-  client.publish(mqtt_topic3, dtostrf(faderValue2, 4, 0, msgBuffer));
-  client.publish(mqtt_topic4, dtostrf(faderValue3, 2, 0, msgBuffer));
 
-  Serial.println("Sw1:" + String(faderValue1));
-  Serial.println("Sw2:" + String(faderValue2));
-  Serial.println("Sw3:" + String(faderValue3));
-  Serial.println(pressedButton);
+  for (int i = 0; i < 2; i++) {
+    sprintf(msgBuffer, "%04d", faderValue[0]);
+    client.publish(MQTT_TOPIC_FADER[0], msgBuffer);
+  }
+
+  //  Uncomment these lines for debugging
+  Serial.println("FA1:" + String(faderValue[0]));
+  Serial.println("FA2:" + String(faderValue[1]));
+  Serial.println("FA3:" + String(faderValue[2]));
+  Serial.println("BT:" + String(pressedButton));
 
   delay(50);
 }
