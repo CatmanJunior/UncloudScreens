@@ -13,18 +13,15 @@ TODO:
 #include <PubSubClient.h> // Allows us to connect to, and publish to the MQTT broker
 #include <Adafruit_NeoPixel.h> //Lib for the programable leds
 
-
-
-
 //Pin out for Wemos Mini D1(R2 has the same)
 const int LEDPIN = 0;       // Connect LED (PL9823) to pin D3
 const int SWITCHPIN1 = 5;   // Connect switch 1 to pin D1
 const int SWITCHPIN2 = 4;   // Connect switch 2 to pin D2
 const int SWITCHPIN3 = 16;  // Connect switch 3 to pin D0
-const int SWITCHPIN4 = 15;  // Connect switch 4 to pin D8
+const int SWITCHPIN4 = 13;  // Connect switch 4 to pin D7
 const int SWITCHPIN5 = 14;  // Connect switch 5 to pin D5
 const int SWITCHPIN6 = 12;  // Connect switch 6 to pin D6
-const int BUTTONPIN = 13;  // Connect switch 7 to pin D7
+const int BUTTONPIN = 15;   // Connect button 1 to pin D8
 
 const byte NUMPIXELS = 6;    //Amount of LEDS
 
@@ -39,7 +36,8 @@ const char* TEST_WIFI_PASSWORD = "Sx7phx8fnkeP";
 
 // MQTT
 // Make sure to update this for your own MQTT Broker!
-const char* MQTT_SERVER = "192.168.178.194";
+const char* MQTT_SERVER_TEST = "192.168.178.194";
+const char* MQTT_SERVER = "192.168.15.102";
 const char* MQTT_TOPIC_BUTTON = "c1_b1";
 const char* MQTT_USERNAME = "uncloud";
 const char* MQTT_PASSWORD = "uncloud";
@@ -101,6 +99,7 @@ void setup() {
   //WIFI INIT
   Serial.print("Connecting to ");
   Serial.println(SS_ID);
+
   
   // Connect to the WiFi (if button is being hold, use test wifi)
   if (digitalRead(BUTTONPIN) == LOW) WiFi.begin(SS_ID, WIFI_PASSWORD);

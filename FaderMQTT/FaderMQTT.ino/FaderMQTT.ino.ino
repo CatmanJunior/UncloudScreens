@@ -18,7 +18,7 @@ const byte LEDPIN = 0;        // Connect LED to pin D3
 
 const byte NUMPIXELS = 1;    //Amount of LEDS
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_RGB + NEO_KHZ800);
 
 // WiFi
 // Make sure to update this for your own WiFi network!
@@ -125,8 +125,8 @@ void loop() {
   for (int i = 0; i < 3; i++) {
     digitalWrite(FADER[i], HIGH);
     delay(5);
-    faderValue[i] = analogRead(A0);
-//    faderValue[i] = log10(analogRead(A0)) * 323;
+//    faderValue[i] = analogRead(A0);
+    faderValue[i] = int(log10(float(analogRead(A0)-4)) * 331.0);
     digitalWrite(FADER[i], LOW);
   }
 
