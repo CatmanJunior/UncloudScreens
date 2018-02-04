@@ -7,7 +7,7 @@
 #include <ESP8266WiFi.h> // Enables the ESP8266 to connect to the local network (via WiFi)
 #include <PubSubClient.h> // Allows us to connect to, and publish to the MQTT broker
 #include <Adafruit_NeoPixel.h> //Lib for the programable leds
-#include <math.h>   
+#include <math.h>
 
 const byte BUTTONPIN1 = 14;   // Connect button1 to pin D5
 const byte BUTTONPIN2 = 12;   // Connect button2 to pin D6
@@ -24,12 +24,10 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_RGB + NEO_KH
 // Make sure to update this for your own WiFi network!
 const char* SS_ID = "test";
 const char* WIFI_PASSWORD = "testtest";
-const char* TEST_SS_ID = "Ziggo78F5D45";
-const char* TEST_WIFI_PASSWORD = "Sx7phx8fnkeP";
 
 // MQTT
 // Make sure to update this for your own MQTT Broker!
-const char* MQTT_SERVER = "192.168.178.194";
+const char* MQTT_SERVER = "192.168.15.102";
 const char* MQTT_TOPIC_BUTTON = "c2_b1";
 const char* MQTT_TOPIC_FADER[3] = {"c2_f1", "c2_f2", "c2_f3"};
 const char* MQTT_USERNAME = "uncloud";
@@ -58,41 +56,20 @@ void pixelsOneColor(int r, int g, int b) {
   pixels.show();
 }
 
-void setup() {
-  Serial.begin(115200);
-
-  pixels.begin(); // This initializes the NeoPixel library.
-
-  pinMode(FADERPIN1, OUTPUT);
-  pinMode(FADERPIN2, OUTPUT);
-  pinMode(FADERPIN3, OUTPUT);
-
-  pinMode(BUTTONPIN1, INPUT);
-  pinMode(BUTTONPIN2, INPUT);
-
-  // Setup pushbutton Bouncer object
-  BUTTON[0].attach(BUTTONPIN1);
-  BUTTON[1].attach(BUTTONPIN2);
-
-  for (int i = 0; i < 2; i++) {
-    BUTTON[i].interval(5);
-  }
-
+void startConnection()
+{
   pixelsOneColor(100, 155, 000);
   //Wait a minute before starting up so we are sure the Raspberry has started (Cancel by pressing button)
   while ((digitalRead(BUTTONPIN1) == LOW) && (millis() < 60000)) {
     delay(50);
   }
 
-  delay(500);
-
   //WIFI INIT
   Serial.print("Connecting to ");
   Serial.println(SS_ID);
 
   // Connect to the WiFi (if button is being hold, use test wifi)
-  if (digitalRead(BUTTONPIN1) == LOW) WiFi.begin(SS_ID, WIFI_PASSWORD);
-  else WiFi.begin(TEST_SS_ID, TEST_WIFI_PASSWORD);
+  WiFi.begin(SS_ID, WIFI_PASSWORD);
 
   // Wait until the connection has been confirmed before continuing
   while (WiFi.status() != WL_CONNECTED) {
@@ -107,16 +84,39 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  delay(500);
-  pixelsOneColor(0, 0, 0);
 
   // Connect to MQTT Broker
   if (client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.println("Connected to MQTT Broker!");
+    pixelsOneColor(0, 0, 0);
   } else {
     Serial.println("Connection to MQTT Broker failed...");
     pixelsOneColor(0, 155, 155); //if no connection turn purple
+    delay(5000);
+    ESP.restart();
   }
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pixels.begin(); // This initializes the NeoPixel library.
+
+  pinMode(FADERPIN1, OUTPUT);
+  pinMode(FADERPIN2, OUTPUT);
+  pinMode(FADERPIN3, OUTPUT);
+  pinMode(BUTTONPIN1, INPUT);
+  pinMode(BUTTONPIN2, INPUT);
+
+  // Setup pushbutton Bouncer object
+  BUTTON[0].attach(BUTTONPIN1);
+  BUTTON[1].attach(BUTTONPIN2);
+
+  for (int i = 0; i < 2; i++) {
+    BUTTON[i].interval(5);
+  }
+
+  startConnection();
 }
 
 void loop() {
@@ -125,8 +125,8 @@ void loop() {
   for (int i = 0; i < 3; i++) {
     digitalWrite(FADER[i], HIGH);
     delay(5);
-//    faderValue[i] = analogRead(A0);
-    faderValue[i] = int(log10(float(analogRead(A0)-4)) * 331.0);
+    faderValue[i] = analogRead(A0);
+    //    faderValue[i] = int(log10(float(analogRead(A0) - 4)) * 331.0);
     digitalWrite(FADER[i], LOW);
   }
 
@@ -158,17 +158,17 @@ void loop() {
     }
   }
 
-  for (int i = 0; i < 2; i++) {
-    sprintf(msgBuffer, "%04d", faderValue[0]);
-    client.publish(MQTT_TOPIC_FADER[0], msgBuffer);
+  for (int i = 0; i < 3; i++) {
+    sprintf(msgBuffer, "%04d", faderValue[i]);
+    client.publish(MQTT_TOPIC_FADER[i], msgBuffer);
   }
 
   //  Uncomment these lines for debugging
-  Serial.println("FA1:" + String(faderValue[0]));
-  Serial.println("FA2:" + String(faderValue[1]));
-  Serial.println("FA3:" + String(faderValue[2]));
-  Serial.println("BT:" + String(pressedButton));
+  //  Serial.println("FA1:" + String(faderValue[0]));
+  //  Serial.println("FA2:" + String(faderValue[1]));
+  //  Serial.println("FA3:" + String(faderValue[2]));
+  //  Serial.println("BT:" + String(pressedButton));
 
-  delay(50);
+  delay(150);
 }
 

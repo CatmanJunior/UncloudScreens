@@ -3,7 +3,7 @@ Tesseract tesseract;
 
 void setup() {
   client = new MQTTClient(this);
-  client.connect("mqtt://uncloud:uncloud@192.168.178.194", "processing");
+  client.connect("mqtt://uncloud:uncloud@192.168.15.102", "processing");
   client.subscribe("button");
   size(640, 640);
   stroke(255);
