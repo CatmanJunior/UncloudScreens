@@ -8,11 +8,11 @@
 #include <PubSubClient.h> // Allows us to connect to, and publish to the MQTT broker
 #include <Adafruit_NeoPixel.h>
 
-const byte BUTTONPIN1 = 14; // Connect your button to pin D5
-const byte BUTTONPIN2 = 12; // Connect your button to pin #13
-const byte XPIN = 5; // Connect your button to pin #13
-const byte YPIN = 4; // Connect your button to pin #13
-const byte LEDPIN = 0;
+const byte BUTTONPIN1 = 5; // Connect your button to pin D5
+const byte BUTTONPIN2 = 4; // Connect your button to pin #13
+const byte XPIN = 12; // Connect your button to pin #13
+const byte YPIN = 13; // Connect your button to pin #13
+const byte LEDPIN = 14;
 
 int XValue;
 int YValue;
@@ -58,6 +58,7 @@ void pixelsOneColor(int r, int g, int b) {
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("blabla");
 
   pixels.begin(); // This initializes the NeoPixel library.
 
@@ -83,33 +84,33 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(SS_ID);
 
-  // Connect to the WiFi (if button is being hold, use test wifi)
-  WiFi.begin(SS_ID, WIFI_PASSWORD);
-
-  // Wait until the connection has been confirmed before continuing
-  while (WiFi.status() != WL_CONNECTED) {
-    pixelsOneColor(155, 0, 0);
-    delay(250);
-    Serial.print(".");
-    pixelsOneColor(0, 0, 0);
-    delay(250);
-  }
-
-  pixelsOneColor(0, 155, 0);
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Connect to MQTT Broker
-  if (client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
-    Serial.println("Connected to MQTT Broker!");
-    pixelsOneColor(0, 0, 0);
-  } else {
-    Serial.println("Connection to MQTT Broker failed...");
-    pixelsOneColor(0, 155, 155); //if no connection turn purple
-    delay(5000);
-    ESP.restart();
-  }
+//  // Connect to the WiFi (if button is being hold, use test wifi)
+//  WiFi.begin(SS_ID, WIFI_PASSWORD);
+//
+//  // Wait until the connection has been confirmed before continuing
+//  while (WiFi.status() != WL_CONNECTED) {
+//    pixelsOneColor(155, 0, 0);
+//    delay(250);
+//    Serial.print(".");
+//    pixelsOneColor(0, 0, 0);
+//    delay(250);
+//  }
+//
+//  pixelsOneColor(0, 155, 0);
+//  Serial.println("WiFi connected");
+//  Serial.print("IP address: ");
+//  Serial.println(WiFi.localIP());
+//
+//  // Connect to MQTT Broker
+//  if (client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
+//    Serial.println("Connected to MQTT Broker!");
+//    pixelsOneColor(0, 0, 0);
+//  } else {
+//    Serial.println("Connection to MQTT Broker failed...");
+//    pixelsOneColor(0, 155, 155); //if no connection turn purple
+//    delay(5000);
+//    ESP.restart();
+//  }
 }
 
 void loop() {
@@ -125,6 +126,10 @@ void loop() {
   // Update button state
   BUTTON[0].update();
   BUTTON[1].update();
+//
+//  pixelsOneColor(0, 0, 0);
+//  delay(250);
+//  pixelsOneColor(255, 0, 0);
 
   if (BUTTON[0].rose()) {
     pressedButton = 1;
@@ -137,28 +142,32 @@ void loop() {
 
   pixels.show(); // This sends the updated pixel color to the hardware.
 
-  if (pressedButton != 0) {
-    // PUBLISH to the MQTT Broker (topic = mqtt_topic, defined at the beginning)
-    // Here, "Button pressed!" is the Payload, but this could be changed to a sensor reading, for example.
-    sprintf(msgBuffer, "%02d", pressedButton);
-    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
-      Serial.println("Button pushed and message sent!");
-    }
-    else {
-      Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
-      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
-    }
-  }
-
-
-  sprintf(msgBuffer, "%04d", XValue);
-  client.publish(MQTT_TOPIC_X, msgBuffer);
-  sprintf(msgBuffer, "%04d", YValue);
-  client.publish(MQTT_TOPIC_Y, msgBuffer);
+//  if (pressedButton != 0) {
+//    // PUBLISH to the MQTT Broker (topic = mqtt_topic, defined at the beginning)
+//    // Here, "Button pressed!" is the Payload, but this could be changed to a sensor reading, for example.
+//    sprintf(msgBuffer, "%02d", pressedButton);
+//    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
+//      Serial.println("Button pushed and message sent!");
+//    }
+//    else {
+//      Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
+//      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
+//    }
+//  }
+//
+//
+//  sprintf(msgBuffer, "%04d", XValue);
+//  client.publish(MQTT_TOPIC_X, msgBuffer);
+//  sprintf(msgBuffer, "%04d", YValue);
+//  client.publish(MQTT_TOPIC_Y, msgBuffer);
+  Serial.println(YValue);
+  Serial.println(XValue);
+  Serial.println(digitalRead(BUTTONPIN1));
+  Serial.println(digitalRead(BUTTONPIN2));
   //  Serial.println("Sw1:" + String(faderValue1));
   //  Serial.println("Sw2:" + String(faderValue2));
   //  Serial.println("Sw3:" + String(faderValue3));
-  Serial.println(pressedButton);
+//  Serial.println(pressedButton);
 
   delay(150);
 }
