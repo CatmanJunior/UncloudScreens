@@ -28,7 +28,7 @@ const char* WIFI_PASSWORD = "testtest";
 // Make sure to update this for your own MQTT Broker!
 const char* MQTT_SERVER = "192.168.15.102";
 const char* MQTT_TOPIC_BUTTON = "c2_b1";
-const char* MQTT_TOPIC_FADER[3] = {"c2_f1", "c2_f2", "c2_f3"};
+const char* MQTT_TOPIC_FADER[2] = {"c4_f1", "c4_f2"};
 const char* MQTT_USERNAME = "uncloud";
 const char* MQTT_PASSWORD = "uncloud";
 const char* CLIENT_ID = "controller3"; // The client id identifies the ESP8266 device. Think of it a bit like a hostname.
@@ -114,7 +114,7 @@ void setup() {
     BUTTON[i].interval(5);
   }
 
-//  startConnection();
+  //  startConnection();
 }
 
 void loop() {
@@ -123,8 +123,8 @@ void loop() {
   for (int i = 0; i < 2; i++) {
     digitalWrite(FADER[i], HIGH);
     delay(5);
-    faderValue[i] = analogRead(A0);
-    //    faderValue[i] = int(log10(float(analogRead(A0) - 4)) * 331.0);
+    //    faderValue[i] = analogRead(A0);
+    faderValue[i] = int(log10(float(analogRead(A0) - 4)) * 168);
     digitalWrite(FADER[i], LOW);
   }
 
@@ -132,41 +132,44 @@ void loop() {
     BUTTON[i].update();     //Update the button state
     if (BUTTON[i].rose()) { //If it went from low to high
       pressedButton = i + 1;
-      if (i == 0) pixels.setPixelColor(0, pixels.Color(0, 150, 0)); // Moderately bright green color.
-      if (i == 1) pixels.setPixelColor(0, pixels.Color(150, 0, 0)); // Moderately bright green color.
+
     }
     if (BUTTON[i].fell()) { //if it went from high to low
       pressedButton = i + 3;
+
     }
   }
-
+  if (pressedButton == 2) pixels.setPixelColor(1, pixels.Color(0, 150, 0)); // Moderately bright green color.
+  if (pressedButton == 1) pixels.setPixelColor(0, pixels.Color(150, 0, 0)); // Moderately bright green color.
+  if (pressedButton == 4) pixels.setPixelColor(1, pixels.Color(0, 0, 0)); // Moderately bright green color.
+  if (pressedButton == 3) pixels.setPixelColor(0, pixels.Color(0, 0, 150)); // Moderately bright green color.
   pixels.show(); // This sends the updated pixel color to the hardware.
-//
-//  if (pressedButton != 0) {
-//    sprintf(msgBuffer, "%02d", pressedButton);
-//    Serial.println(msgBuffer);
-//    // PUBLISH to the MQTT Broker
-//    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
-//      Serial.println("Button pushed and message sent!");
-//    }
-//    else { //if it failed, try again
-//      Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
-//      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
-//      client.publish(MQTT_TOPIC_BUTTON, msgBuffer);
-//    }
-//  }
-//
-//  for (int i = 0; i < 3; i++) {
-//    sprintf(msgBuffer, "%04d", faderValue[i]);
-//    client.publish(MQTT_TOPIC_FADER[i], msgBuffer);
-//  }
+  //
+  //  if (pressedButton != 0) {
+  //    sprintf(msgBuffer, "%02d", pressedButton);
+  //    Serial.println(msgBuffer);
+  //    // PUBLISH to the MQTT Broker
+  //    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
+  //      Serial.println("Button pushed and message sent!");
+  //    }
+  //    else { //if it failed, try again
+  //      Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
+  //      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
+  //      client.publish(MQTT_TOPIC_BUTTON, msgBuffer);
+  //    }
+  //  }
+  //
+  //  for (int i = 0; i < 2; i++) {
+  //    sprintf(msgBuffer, "%04d", faderValue[i]);
+  //    client.publish(MQTT_TOPIC_FADER[i], msgBuffer);
+  //  }
 
-//    Uncomment these lines for debugging
-    Serial.println("FA1:" + String(faderValue[0]));
-    Serial.println("FA2:" + String(faderValue[1]));
+  //    Uncomment these lines for debugging
+  Serial.println("FA1:" + String(faderValue[0]));
+  Serial.println("FA2:" + String(faderValue[1]));
 
-    Serial.println("BT:" + String(pressedButton));
+  Serial.println("BT:" + String(pressedButton));
 
-  delay(150);
+  delay(75);
 }
 
