@@ -27,8 +27,8 @@ const char* WIFI_PASSWORD = "testtest";
 // MQTT
 // Make sure to update this for your own MQTT Broker!
 const char* MQTT_SERVER = "192.168.15.102";
-const char* MQTT_TOPIC_BUTTON = "c2_b1";
-const char* MQTT_TOPIC_FADER[2] = {"c4_f1", "c4_f2"};
+const char* MQTT_TOPIC_BUTTON = "c3_b1";
+const char* MQTT_TOPIC_FADER[2] = {"c3_f1", "c3_f2"};
 const char* MQTT_USERNAME = "uncloud";
 const char* MQTT_PASSWORD = "uncloud";
 const char* CLIENT_ID = "controller3"; // The client id identifies the ESP8266 device. Think of it a bit like a hostname.
@@ -114,7 +114,7 @@ void setup() {
     BUTTON[i].interval(5);
   }
 
-  //  startConnection();
+    startConnection();
 }
 
 void loop() {
@@ -144,25 +144,25 @@ void loop() {
   if (pressedButton == 4) pixels.setPixelColor(1, pixels.Color(0, 0, 0)); // Moderately bright green color.
   if (pressedButton == 3) pixels.setPixelColor(0, pixels.Color(0, 0, 150)); // Moderately bright green color.
   pixels.show(); // This sends the updated pixel color to the hardware.
-  //
-  //  if (pressedButton != 0) {
-  //    sprintf(msgBuffer, "%02d", pressedButton);
-  //    Serial.println(msgBuffer);
-  //    // PUBLISH to the MQTT Broker
-  //    if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
-  //      Serial.println("Button pushed and message sent!");
-  //    }
-  //    else { //if it failed, try again
-  //      Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
-  //      client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
-  //      client.publish(MQTT_TOPIC_BUTTON, msgBuffer);
-  //    }
-  //  }
-  //
-  //  for (int i = 0; i < 2; i++) {
-  //    sprintf(msgBuffer, "%04d", faderValue[i]);
-  //    client.publish(MQTT_TOPIC_FADER[i], msgBuffer);
-  //  }
+  
+    if (pressedButton != 0) {
+      sprintf(msgBuffer, "%02d", pressedButton);
+      Serial.println(msgBuffer);
+      // PUBLISH to the MQTT Broker
+      if (client.publish(MQTT_TOPIC_BUTTON, msgBuffer)) {
+        Serial.println("Button pushed and message sent!");
+      }
+      else { //if it failed, try again
+        Serial.println("Message failed to send. Reconnecting to MQTT Broker and trying again");
+        client.connect(CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
+        client.publish(MQTT_TOPIC_BUTTON, msgBuffer);
+      }
+    }
+  
+    for (int i = 0; i < 2; i++) {
+      sprintf(msgBuffer, "%04d", faderValue[i]);
+      client.publish(MQTT_TOPIC_FADER[i], msgBuffer);
+    }
 
   //    Uncomment these lines for debugging
   Serial.println("FA1:" + String(faderValue[0]));
